@@ -22,4 +22,4 @@ yarn-error.log*
 
 # generated
 /src/_proto
-/cpp
+/cpp/_proto
