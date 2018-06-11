@@ -4,30 +4,28 @@ import { ParseRequest } from './_proto/protocol_pb';
 import './App.css';
 
 /* global Module */
-function callLibuast(uast) {
-  Module.onRuntimeInitialized = async _ => {
+function callLibuast(uast, query) {
+  return new Promise((resolve, reject) => {
     const api = {
       filter: Module.cwrap('filter', 'number', ['array', 'number', 'string'])
     };
     console.log('call:');
-    const r = api.filter(uast, uast.length, '//*');
-    console.log('r:', r);
-  };
+    const r = api.filter(uast, uast.length, query);
+    resolve(r);
+  });
 }
 
-function parse() {
+function parse(code) {
   const client = new ProtocolServiceClient('http://127.0.0.1:8080');
   const req = new ParseRequest();
   req.setLanguage('javascript');
-  req.setContent('console.log("test");');
+  req.setContent(code);
   return new Promise((resolve, reject) => {
     client.parse(req, function(err, res) {
       if (err) {
         reject(err);
         return;
       }
-
-      callLibuast(res.getUast().serializeBinary());
 
       resolve(res);
     });
@@ -39,19 +37,41 @@ class App extends Component {
     super(props);
 
     this.state = {
+      wasmReady: false,
+      code: 'console.log("test");',
+      query: '//*',
+      filterResult: null,
       res: null,
       err: null
     };
+
+    this.handleParse = this.handleParse.bind(this);
+    this.handleFilter = this.handleFilter.bind(this);
   }
 
   componentDidMount() {
-    parse()
+    this.handleParse();
+
+    Module.onRuntimeInitialized = async _ => {
+      this.setState({ wasmReady: true });
+    };
+  }
+
+  handleParse() {
+    parse(this.state.code)
       .then(res => this.setState({ res }))
       .catch(err => this.setState({ err }));
   }
 
+  handleFilter() {
+    callLibuast(
+      this.state.res.getUast().serializeBinary(),
+      this.state.query
+    ).then(r => this.setState({ filterResult: r }));
+  }
+
   render() {
-    const { res, err } = this.state;
+    const { code, res, err, query, filterResult, wasmReady } = this.state;
 
     if (!res && !err) {
       return <div>loading...</div>;
@@ -62,8 +82,36 @@ class App extends Component {
     }
 
     return (
-      <div>
-        <pre>{JSON.stringify(res.toObject(), null, '  ')}</pre>
+      <div style={{ padding: '10px 30px' }}>
+        <div>
+          UAST for code:<br />
+          <textarea
+            value={code}
+            onChange={e => this.setState({ code: e.target.value })}
+            style={{ width: '250px', height: '100px' }}
+          />
+          <br />
+          <button onClick={this.handleParse}>parse</button>
+          <br />
+          <br />
+        </div>
+        <div>
+          Query{' '}
+          <input
+            type="text"
+            value={query}
+            onChange={e => this.setState({ query: e.target.value })}
+          />
+          <button onClick={this.handleFilter} disabled={!wasmReady}>
+            Filter
+          </button>
+          <div>Nodes found: {filterResult}</div>
+          <br />
+        </div>
+        <div>
+          Full server response:
+          <pre>{JSON.stringify(res.toObject(), null, '  ')}</pre>
+        </div>
       </div>
     );
   }
