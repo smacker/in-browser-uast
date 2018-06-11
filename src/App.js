@@ -3,6 +3,18 @@ import { ProtocolServiceClient } from './_proto/protocol_pb_service';
 import { ParseRequest } from './_proto/protocol_pb';
 import './App.css';
 
+/* global Module */
+function callLibuast(uast) {
+  Module.onRuntimeInitialized = async _ => {
+    const api = {
+      filter: Module.cwrap('filter', 'number', ['array', 'number', 'string'])
+    };
+    console.log('call:');
+    const r = api.filter(uast, uast.length, '//*');
+    console.log('r:', r);
+  };
+}
+
 function parse() {
   const client = new ProtocolServiceClient('http://127.0.0.1:8080');
   const req = new ParseRequest();
@@ -14,6 +26,9 @@ function parse() {
         reject(err);
         return;
       }
+
+      callLibuast(res.getUast().serializeBinary());
+
       resolve(res);
     });
   });
