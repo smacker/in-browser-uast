@@ -1,6 +1,10 @@
 #!/bin/bash
 
-emcc -s WASM=1 -s USE_ZLIB=1 -s EXTRA_EXPORTED_RUNTIME_METHODS='["cwrap"]' -s DISABLE_EXCEPTION_CATCHING=0 \
+emcc -s WASM=1 -s USE_ZLIB=1 -s ALLOW_MEMORY_GROWTH=1 \
+    -s ASSERTIONS=2 \
+    -s DISABLE_EXCEPTION_CATCHING=0 \
+    -s EXTRA_EXPORTED_RUNTIME_METHODS='["cwrap"]' \
+    -Werror \
     -o public/libuast.js \
     -Ilibs/libxml2/include \
     -Ilibs/libuast/src \
