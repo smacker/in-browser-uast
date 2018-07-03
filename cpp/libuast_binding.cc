@@ -145,12 +145,6 @@ extern "C"
         char *error;
     } filter_result;
 
-    void EMSCRIPTEN_KEEPALIVE free_filter(filter_result *result)
-    {
-        NodesFree(result->nodes);
-        delete result;
-    }
-
     filter_result *EMSCRIPTEN_KEEPALIVE filter(int uast, const char *query)
     {
         Uast *ctx = UastNew(NodeIface{
@@ -219,6 +213,22 @@ extern "C"
         }
 
         return ids;
+    }
+
+    // I'm not sure it works correctly
+    void EMSCRIPTEN_KEEPALIVE free_filter(filter_result *result)
+    {
+
+        NodesFree(result->nodes);
+        free(result->error);
+
+        if (result != nullptr)
+        {
+            delete result;
+            result = nullptr;
+        }
+
+        UastFree(ctx);
     }
 
 #ifdef __cplusplus

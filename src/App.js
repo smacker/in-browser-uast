@@ -17,6 +17,7 @@ function callLibuast(uast, mapping, query) {
   return new Promise((resolve, reject) => {
     const api = {
       filter: Module.cwrap('filter', 'number', ['number', 'string']),
+      freeFilter: Module.cwrap('free_filter', '', ['number']),
       getError: Module.cwrap('get_error', 'string', ['number']),
       getNodesSize: Module.cwrap('get_nodes_size', 'number', ['number']),
       getNodes: Module.cwrap('get_nodes', 'number', ['number'])
@@ -31,6 +32,7 @@ function callLibuast(uast, mapping, query) {
 
     const err = api.getError(result);
     if (err) {
+      api.freeFilter(result);
       return reject(new Error(err));
     }
 
@@ -39,6 +41,7 @@ function callLibuast(uast, mapping, query) {
     const arr = readArray(nodes, size);
 
     Module.UAST_setMapping(null);
+    api.freeFilter(result);
 
     resolve(Array.from(arr).map(i => mapping[i]));
   });
