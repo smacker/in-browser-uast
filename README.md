@@ -1,6 +1,31 @@
-1. generate code from proto: `./protogen.sh`
-2. download and build C dependencies: `./build_libs.sh`
-3. build wasm adapter to libuast `./wasm_build.sh`
-4. run bblfsh server normally
-5. run grpc proxy `grpcwebproxy --backend_addr=127.0.0.1:9432 --run_tls_server=false`
-6. start the example app: `yarn start`
+# In-browser UAST prototype.
+
+* use web grpc to call bblfsh
+* use libuast compiled to WASM for uast filtering
+
+## Docker
+
+TBD
+
+## Manual building:
+
+### Requirements:
+
+* nodejs + yarn
+* python2.7
+* build tools: cmake autoconf libtool automake pkg-config make
+* [emscripten](http://kripken.github.io/emscripten-site/)
+* [protoc](https://github.com/google/protobuf)
+* protoc 3.1.0 located in `./protoc3.1` directory
+
+### Steps to build:
+
+* generate code from proto: `./protogen.sh`
+* download and build C dependencies: `./build_libs.sh`
+* build wasm adapter to libuast `./wasm_build.sh`
+* build/start the example app: `yarn buid/start`
+
+## Backend dependencies without docker
+
+* run [bblfsh server](https://github.com/bblfsh/bblfshd/) on 9432 port
+* run [grpc proxy](https://github.com/improbable-eng/grpc-web/tree/master/go/grpcwebproxy) `grpcwebproxy --backend_addr=127.0.0.1:9432 --run_tls_server=false`
