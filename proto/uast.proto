@@ -19,7 +19,6 @@ message Node {
 	gopkg.in.bblfsh.sdk.v1.uast.Position start_position = 5;
 	gopkg.in.bblfsh.sdk.v1.uast.Position end_position = 6;
 	repeated gopkg.in.bblfsh.sdk.v1.uast.Role roles = 7;
-	uint32 id = 8;
 }
 
 // Position represents a position in a source code file.

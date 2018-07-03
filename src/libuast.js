@@ -31,7 +31,7 @@ var LibUAST = {
   },
 
   getNodeChildAt: function(n, idx) {
-    return UAST.mapping[n].getChildrenList()[idx].getId();
+    return UAST.mapping[n].getChildrenList()[idx].id;
   },
 
   getNodeRolesSize: function(n) {

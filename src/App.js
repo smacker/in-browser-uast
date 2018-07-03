@@ -25,7 +25,7 @@ function callLibuast(uast, mapping, query) {
 
     Module.UAST_setMapping(mapping);
 
-    const result = api.filter(uast.getId(), query);
+    const result = api.filter(uast.id, query);
     if (!result) {
       return reject(new Error('internal error: filter did not return result'));
     }
@@ -71,7 +71,7 @@ function mapUAST(uast) {
   function addIds(node) {
     mapping[globalId] = node;
 
-    node.setId(globalId);
+    node.id = globalId;
     node.getChildrenList().forEach(child => addIds(child, ++globalId));
   }
 
