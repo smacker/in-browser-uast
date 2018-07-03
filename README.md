@@ -5,7 +5,11 @@
 
 ## Docker
 
-TBD
+```
+docker-compose up
+```
+
+The example app will be available on http://127.0.0.1:8444
 
 ## Manual building:
 
