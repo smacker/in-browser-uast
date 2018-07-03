@@ -1,28 +1,20 @@
-.App {
+.app {
+  display: flex;
+}
+
+.app__left-pane,
+.app__right-pane {
+  width: 50%;
+  height: 100%;
+}
+
+.parse-button {
+  display: block;
+  font-size: 28px;
+  margin: 10px auto;
+}
+
+.filter-box {
+  margin: 10px;
   text-align: center;
-}
-
-.App-logo {
-  animation: App-logo-spin infinite 20s linear;
-  height: 80px;
-}
-
-.App-header {
-  background-color: #222;
-  height: 150px;
-  padding: 20px;
-  color: white;
-}
-
-.App-title {
-  font-size: 1.5em;
-}
-
-.App-intro {
-  font-size: large;
-}
-
-@keyframes App-logo-spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
 }

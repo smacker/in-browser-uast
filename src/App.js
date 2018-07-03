@@ -1,8 +1,15 @@
 import React, { Component } from 'react';
+import UASTViewer, { Editor } from 'uast-viewer';
 import { ProtocolServiceClient } from './_proto/protocol_pb_service';
 import { ParseRequest } from './_proto/protocol_pb';
-// import { Node } from './_proto/uast_pb';
+import { Role } from './_proto/uast_pb';
+import 'uast-viewer/dist/default-theme.css';
 import './App.css';
+
+const reversedRoles = Object.keys(Role).reduce(
+  (acc, name) => Object.assign(acc, { [Role[name]]: name.toLowerCase() }),
+  {}
+);
 
 /* global Module */
 function readArray(ptr, length) {
@@ -43,7 +50,7 @@ function callLibuast(uast, mapping, query) {
     Module.UAST_setMapping(null);
     api.freeFilter(result);
 
-    resolve(Array.from(arr).map(i => mapping[i]));
+    resolve(Array.from(arr));
   });
 }
 
@@ -78,6 +85,45 @@ function mapUAST(uast) {
   addIds(uast);
 
   return mapping;
+}
+
+function convertPos(pos) {
+  return {
+    Offset: pos.getOffset(),
+    Line: pos.getLine(),
+    Col: pos.getCol()
+  };
+}
+
+function convertUAST(mapping) {
+  return Object.keys(mapping).reduce((tree, id) => {
+    const node = mapping[id];
+
+    tree[id] = {
+      id: +id + 1,
+      InternalType: node.getInternalType(),
+      Token: node.getToken(),
+      Properties: node
+        .getPropertiesMap()
+        .toArray()
+        .reduce(
+          (acc, [key, value]) => Object.assign(acc, { [key]: value }),
+          {}
+        ),
+      StartPosition: node.hasStartPosition()
+        ? convertPos(node.getStartPosition())
+        : null,
+      EndPosition: node.hasEndPosition()
+        ? convertPos(node.getEndPosition())
+        : null,
+      Roles: node.getRolesList().map(r => reversedRoles[r]),
+      Children: node.getChildrenList().map(n => n.id),
+      //
+      expanded: id === '0'
+    };
+
+    return tree;
+  }, {});
 }
 
 class App extends Component {
@@ -135,6 +181,7 @@ class App extends Component {
       err,
       wasmReady,
       query,
+      uastMapping,
       filterResult,
       filterErr
     } = this.state;
@@ -147,48 +194,35 @@ class App extends Component {
       return <div>{err.toString()}</div>;
     }
 
+    let uast = convertUAST(uastMapping);
+    let rootIds = filterResult || [0];
+
     return (
-      <div style={{ padding: '10px 30px' }}>
-        <div>
-          UAST for code:<br />
-          <textarea
-            value={code}
-            onChange={e => this.setState({ code: e.target.value })}
-            style={{ width: '250px', height: '100px' }}
-          />
-          <br />
-          <button onClick={this.handleParse}>parse</button>
-          <br />
-          <br />
-        </div>
-        <div>
-          Query{' '}
-          <input
-            type="text"
-            value={query}
-            onChange={e => this.setState({ query: e.target.value })}
-          />
-          <button onClick={this.handleFilter} disabled={!wasmReady}>
-            Filter
+      <div className="app">
+        <div className="app__left-pane">
+          <button className="parse-button" onClick={this.handleParse}>
+            Parse
           </button>
-          {filterErr ? <div>{filterErr.toString()}</div> : null}
-          {filterResult ? (
-            <div>
-              Nodes found:{' '}
-              <pre>
-                {JSON.stringify(
-                  filterResult.map(n => n.toObject()),
-                  null,
-                  '  '
-                )}
-              </pre>
-            </div>
-          ) : null}
-          <br />
+          <Editor
+            code={code}
+            onChange={code => this.setState({ code })}
+            languageMode="text/javascript"
+          />
         </div>
-        <div>
-          Full server response:
-          <pre>{JSON.stringify(res.toObject(), null, '  ')}</pre>
+        <div className="app__right-pane">
+          <div className="filter-box">
+            Query{' '}
+            <input
+              type="text"
+              value={query}
+              onChange={e => this.setState({ query: e.target.value })}
+            />
+            <button onClick={this.handleFilter} disabled={!wasmReady}>
+              Filter
+            </button>
+          </div>
+          {filterErr ? <div>{filterErr.toString()}</div> : null}
+          {uast ? <UASTViewer uast={uast} rootIds={rootIds} /> : null}
         </div>
       </div>
     );
