@@ -1,6 +1,17 @@
 var LibUAST = {
+  $UAST__postset:
+    'Module["UAST_setMapping"] = function Module_UAST_setMapping(mapping) { UAST.mapping = mapping }',
+
+  $UAST: {
+    mapping: {}
+  },
+
+  $setMapping: function(mapping) {
+    $UAST.mapping = mapping;
+  },
+
   getNodeString: function(n, method) {
-    var jsString = globalTable[n][UTF8ToString(method)]();
+    var jsString = UAST.mapping[n][UTF8ToString(method)]();
     var lengthBytes = lengthBytesUTF8(jsString) + 1;
     var stringOnWasmHeap = _malloc(lengthBytes);
     stringToUTF8(jsString, stringOnWasmHeap, lengthBytes + 1);
@@ -8,28 +19,29 @@ var LibUAST = {
   },
 
   getNodeBool: function(n, method) {
-    return globalTable[n][UTF8ToString(method)]();
+    return UAST.mapping[n][UTF8ToString(method)]();
   },
 
   getNodeInt: function(n, method, submethod) {
-    return globalTable[n][UTF8ToString(method)]()[UTF8ToString(submethod)]();
+    return UAST.mapping[n][UTF8ToString(method)]()[UTF8ToString(submethod)]();
   },
 
   getNodeChildrenSize: function(n) {
-    return globalTable[n].getChildrenList().length;
+    return UAST.mapping[n].getChildrenList().length;
   },
 
   getNodeChildAt: function(n, idx) {
-    return globalTable[n].getChildrenList()[idx].getId();
+    return UAST.mapping[n].getChildrenList()[idx].getId();
   },
 
   getNodeRolesSize: function(n) {
-    return globalTable[n].getRolesList().length;
+    return UAST.mapping[n].getRolesList().length;
   },
 
   getNodeRoleAt: function(n, idx) {
-    return globalTable[n].getRolesList()[idx];
+    return UAST.mapping[n].getRolesList()[idx];
   }
 };
 
+autoAddDeps(LibUAST, '$UAST');
 mergeInto(LibraryManager.library, LibUAST);

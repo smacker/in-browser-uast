@@ -13,7 +13,7 @@ function readArray(ptr, length) {
   return result;
 }
 
-function callLibuast(uast, query) {
+function callLibuast(uast, mapping, query) {
   return new Promise((resolve, reject) => {
     const api = {
       filter: Module.cwrap('filter', 'number', ['number', 'string']),
@@ -21,15 +21,19 @@ function callLibuast(uast, query) {
       getNodes: Module.cwrap('get_nodes', 'number', ['number'])
     };
 
+    Module.UAST_setMapping(mapping);
+
     const result = api.filter(uast.getId(), query);
     if (result) {
       const size = api.getNodesSize(result);
       const nodes = api.getNodes(result);
       const arr = readArray(nodes, size);
-      resolve(Array.from(arr).map(i => globalTable[i]));
+      resolve(Array.from(arr).map(i => mapping[i]));
     } else {
       reject('error');
     }
+
+    Module.UAST_setMapping(null);
   });
 }
 
@@ -50,15 +54,20 @@ function parse(code) {
   });
 }
 
-let globalId = 0;
-const globalTable = {};
-window.globalTable = globalTable;
+function mapUAST(uast) {
+  let globalId = 0;
+  let mapping = {};
 
-function addIds(node) {
-  globalTable[globalId] = node;
+  function addIds(node) {
+    mapping[globalId] = node;
 
-  node.setId(globalId);
-  node.getChildrenList().forEach(child => addIds(child, ++globalId));
+    node.setId(globalId);
+    node.getChildrenList().forEach(child => addIds(child, ++globalId));
+  }
+
+  addIds(uast);
+
+  return mapping;
 }
 
 class App extends Component {
@@ -71,6 +80,7 @@ class App extends Component {
       query: '//*[@roleLiteral]',
       filterResult: null,
       res: null,
+      uastMapping: null,
       err: null
     };
 
@@ -89,15 +99,15 @@ class App extends Component {
   handleParse() {
     parse(this.state.code)
       .then(res => {
-        addIds(res.getUast());
-        this.setState({ res });
+        const uastMapping = mapUAST(res.getUast());
+        this.setState({ res, uastMapping });
       })
       .catch(err => this.setState({ err }));
   }
 
   handleFilter() {
     const uast = this.state.res.getUast();
-    callLibuast(uast, this.state.query).then(r =>
+    callLibuast(uast, this.state.uastMapping, this.state.query).then(r =>
       this.setState({ filterResult: r })
     );
   }
