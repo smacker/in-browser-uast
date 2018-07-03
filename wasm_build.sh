@@ -1,8 +1,8 @@
 #!/bin/bash
 
-emcc -s WASM=1 -s USE_ZLIB=1 -s ALLOW_MEMORY_GROWTH=1 \
-    -s ASSERTIONS=2 \
-    -s DISABLE_EXCEPTION_CATCHING=0 \
+# DISABLE_EXCEPTION_CATCHING must be 0 to get correct error from libuast
+
+emcc -s WASM=1 -s USE_ZLIB=1 -O2 -s DISABLE_EXCEPTION_CATCHING=0 \
     -s EXTRA_EXPORTED_RUNTIME_METHODS='["cwrap"]' \
     --js-library src/libuast.js \
     -Werror \
