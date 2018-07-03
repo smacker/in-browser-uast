@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { ProtocolServiceClient } from './_proto/protocol_pb_service';
 import { ParseRequest } from './_proto/protocol_pb';
-import { Node } from './_proto/uast_pb';
+// import { Node } from './_proto/uast_pb';
 import './App.css';
 
 /* global Module */
@@ -16,39 +16,20 @@ function readArray(ptr, length) {
 function callLibuast(uast, query) {
   return new Promise((resolve, reject) => {
     const api = {
-      filter: Module.cwrap('filter', 'number', ['array', 'number', 'string']),
+      filter: Module.cwrap('filter', 'number', ['number', 'string']),
       getNodesSize: Module.cwrap('get_nodes_size', 'number', ['number']),
-      getNodeSize: Module.cwrap('get_node_size', 'number', [
-        'number',
-        'number'
-      ]),
-      getNode: Module.cwrap('get_node', 'number', ['number']),
-      free: Module.cwrap('free_filter', 'number', [])
+      getNodes: Module.cwrap('get_nodes', 'number', ['number'])
     };
-    console.log('call:');
-    const resultPointer = api.filter(uast, uast.length, query);
-    console.log('resultPointer', resultPointer);
-    const nodes = api.getNodesSize(resultPointer);
-    console.log('getNodesSize', nodes);
 
-    const result = [];
-
-    for (let i = 0; i < nodes; i++) {
-      const nodeSize = api.getNodeSize(resultPointer, 1);
-      console.log('getNodeSize', nodeSize);
-      const node = api.getNode(resultPointer, 1);
-      console.log('getNode', node);
-
-      const arr = readArray(node, nodeSize);
-      const n = Node.deserializeBinary(arr);
-      //console.log('n', n);
-
-      result.push(n.toObject());
+    const result = api.filter(uast.getId(), query);
+    if (result) {
+      const size = api.getNodesSize(result);
+      const nodes = api.getNodes(result);
+      const arr = readArray(nodes, size);
+      resolve(Array.from(arr).map(i => globalTable[i]));
+    } else {
+      reject('error');
     }
-
-    api.free(resultPointer);
-
-    resolve(result);
   });
 }
 
@@ -69,6 +50,17 @@ function parse(code) {
   });
 }
 
+let globalId = 0;
+const globalTable = {};
+window.globalTable = globalTable;
+
+function addIds(node) {
+  globalTable[globalId] = node;
+
+  node.setId(globalId);
+  node.getChildrenList().forEach(child => addIds(child, ++globalId));
+}
+
 class App extends Component {
   constructor(props) {
     super(props);
@@ -76,7 +68,7 @@ class App extends Component {
     this.state = {
       wasmReady: false,
       code: 'console.log("test");',
-      query: '//*',
+      query: '//*[@roleLiteral]',
       filterResult: null,
       res: null,
       err: null
@@ -96,15 +88,18 @@ class App extends Component {
 
   handleParse() {
     parse(this.state.code)
-      .then(res => this.setState({ res }))
+      .then(res => {
+        addIds(res.getUast());
+        this.setState({ res });
+      })
       .catch(err => this.setState({ err }));
   }
 
   handleFilter() {
-    callLibuast(
-      this.state.res.getUast().serializeBinary(),
-      this.state.query
-    ).then(r => this.setState({ filterResult: r }));
+    const uast = this.state.res.getUast();
+    callLibuast(uast, this.state.query).then(r =>
+      this.setState({ filterResult: r })
+    );
   }
 
   render() {
@@ -144,7 +139,14 @@ class App extends Component {
           </button>
           {filterResult ? (
             <div>
-              Nodes found: <pre>{JSON.stringify(filterResult, null, '  ')}</pre>
+              Nodes found:{' '}
+              <pre>
+                {JSON.stringify(
+                  filterResult.map(n => n.toObject()),
+                  null,
+                  '  '
+                )}
+              </pre>
             </div>
           ) : null}
           <br />
