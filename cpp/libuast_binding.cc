@@ -142,6 +142,7 @@ extern "C"
     typedef struct
     {
         Nodes *nodes;
+        char *error;
     } filter_result;
 
     void EMSCRIPTEN_KEEPALIVE free_filter(filter_result *result)
@@ -180,17 +181,24 @@ extern "C"
 
         Nodes *nodes = UastFilter(ctx, &uast, query);
 
-        if (nodes == NULL)
-        {
-            printf("nodes == NULL\n");
-            return NULL;
-        }
-
         filter_result result;
         filter_result *result_ptr = &result;
-        result_ptr->nodes = nodes;
+
+        if (nodes == NULL)
+        {
+            result_ptr->error = LastError();
+        }
+        else
+        {
+            result_ptr->nodes = nodes;
+        }
 
         return result_ptr;
+    }
+
+    char *EMSCRIPTEN_KEEPALIVE get_error(filter_result *result)
+    {
+        return result->error;
     }
 
     int EMSCRIPTEN_KEEPALIVE get_nodes_size(filter_result *result)

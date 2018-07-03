@@ -17,6 +17,7 @@ function callLibuast(uast, mapping, query) {
   return new Promise((resolve, reject) => {
     const api = {
       filter: Module.cwrap('filter', 'number', ['number', 'string']),
+      getError: Module.cwrap('get_error', 'string', ['number']),
       getNodesSize: Module.cwrap('get_nodes_size', 'number', ['number']),
       getNodes: Module.cwrap('get_nodes', 'number', ['number'])
     };
@@ -24,16 +25,22 @@ function callLibuast(uast, mapping, query) {
     Module.UAST_setMapping(mapping);
 
     const result = api.filter(uast.getId(), query);
-    if (result) {
-      const size = api.getNodesSize(result);
-      const nodes = api.getNodes(result);
-      const arr = readArray(nodes, size);
-      resolve(Array.from(arr).map(i => mapping[i]));
-    } else {
-      reject('error');
+    if (!result) {
+      return reject(new Error('internal error: filter did not return result'));
     }
 
+    const err = api.getError(result);
+    if (err) {
+      return reject(new Error(err));
+    }
+
+    const size = api.getNodesSize(result);
+    const nodes = api.getNodes(result);
+    const arr = readArray(nodes, size);
+
     Module.UAST_setMapping(null);
+
+    resolve(Array.from(arr).map(i => mapping[i]));
   });
 }
 
@@ -45,7 +52,7 @@ function parse(code) {
   return new Promise((resolve, reject) => {
     client.parse(req, function(err, res) {
       if (err) {
-        reject(err);
+        reject(new Error(err));
         return;
       }
 
@@ -75,13 +82,14 @@ class App extends Component {
     super(props);
 
     this.state = {
-      wasmReady: false,
       code: 'console.log("test");',
-      query: '//*[@roleLiteral]',
-      filterResult: null,
       res: null,
+      err: null,
+      wasmReady: false,
+      query: '//*[@roleLiteral]',
       uastMapping: null,
-      err: null
+      filterResult: null,
+      filterErr: null
     };
 
     this.handleParse = this.handleParse.bind(this);
@@ -97,6 +105,8 @@ class App extends Component {
   }
 
   handleParse() {
+    this.setState({ res: null, uastMapping: null, err: null });
+
     parse(this.state.code)
       .then(res => {
         const uastMapping = mapUAST(res.getUast());
@@ -106,21 +116,32 @@ class App extends Component {
   }
 
   handleFilter() {
+    this.setState({ filterResult: null, filterErr: null });
+
     const uast = this.state.res.getUast();
-    callLibuast(uast, this.state.uastMapping, this.state.query).then(r =>
-      this.setState({ filterResult: r })
-    );
+
+    callLibuast(uast, this.state.uastMapping, this.state.query)
+      .then(r => this.setState({ filterResult: r }))
+      .catch(filterErr => this.setState({ filterErr }));
   }
 
   render() {
-    const { code, res, err, query, filterResult, wasmReady } = this.state;
+    const {
+      code,
+      res,
+      err,
+      wasmReady,
+      query,
+      filterResult,
+      filterErr
+    } = this.state;
 
     if (!res && !err) {
       return <div>loading...</div>;
     }
 
     if (err) {
-      return <div>{err}</div>;
+      return <div>{err.toString()}</div>;
     }
 
     return (
@@ -147,6 +168,7 @@ class App extends Component {
           <button onClick={this.handleFilter} disabled={!wasmReady}>
             Filter
           </button>
+          {filterErr ? <div>{filterErr.toString()}</div> : null}
           {filterResult ? (
             <div>
               Nodes found:{' '}
