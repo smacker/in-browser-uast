@@ -156,7 +156,7 @@ extern "C"
     {
         NodesFree(result->nodes);
         delete result;
-        delete node;
+        //delete node;
     }
 
     size_t EMSCRIPTEN_KEEPALIVE get_node_size(filter_result *result, int i)

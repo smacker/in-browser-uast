@@ -2,6 +2,7 @@
 
 # dependencies
 /node_modules
+/protoc3.1
 
 # testing
 /coverage

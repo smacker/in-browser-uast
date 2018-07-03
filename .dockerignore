@@ -1,0 +1,8 @@
+/src/_proto
+/cpp/_proto
+/libs
+/public/libuast.js
+/public/libuast.wasm
+/node_modules
+/build
+/protoc3.1

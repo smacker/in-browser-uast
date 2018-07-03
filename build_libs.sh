@@ -2,7 +2,7 @@
 
 set -e
 
-mkdir libs
+mkdir -p libs
 cd libs
 
 echo "clone libuast"
@@ -14,7 +14,9 @@ git clone git://git.gnome.org/libxml2 libxml2
     cd libxml2
 
     # make it work on macOS
-    sed -i -e 's/libtoolize/glibtoolize/' autogen.sh
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        sed -i -e 's/libtoolize/glibtoolize/' autogen.sh
+    fi;
 
     emconfigure ./autogen.sh \
         --without-debug \
@@ -23,7 +25,10 @@ git clone git://git.gnome.org/libxml2 libxml2
 
     emmake make
 )
-cp libxml2/.libs/libxml2.{a,dylib} .
+cp libxml2/.libs/libxml2.a .
+# different extentions on mac/linux
+cp libxml2/.libs/libxml2.so ./libxml2.dylib || true
+cp libxml2/.libs/libxml2.dylib . || true
 
 echo " clone and compile libprotobuf"
 git clone https://github.com/invokr/protobuf-emscripten.git
@@ -31,9 +36,12 @@ git clone https://github.com/invokr/protobuf-emscripten.git
     cd protobuf-emscripten/3.1.0
     sh autogen.sh
     emconfigure ./configure --with-protoc=protoc
-    emmake Make
+    emmake make
 )
 
-cp protobuf-emscripten/3.1.0/src/.libs/libprotobuf.{a,dylib} .
+cp protobuf-emscripten/3.1.0/src/.libs/libprotobuf.a .
+# different extentions on mac/linux
+cp protobuf-emscripten/3.1.0/src/.libs/libprotobuf.so ./libprotobuf.dylib || true
+cp protobuf-emscripten/3.1.0/src/.libs/libprotobuf.dylib . || true
 
 cd ..
