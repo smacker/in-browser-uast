@@ -22,7 +22,3 @@ disable_eslint src/_proto/uast_pb.js
 disable_eslint src/_proto/protocol_pb.js
 disable_eslint src/_proto/protocol_pb_service.js
 disable_eslint src/_proto/github.com/gogo/protobuf/gogoproto/gogo_pb.js
-
-protoc3.1/bin/protoc -I ./proto -I ./protoc3.1/include --cpp_out=cpp/_proto \
-  ./proto/github.com/gogo/protobuf/gogoproto/gogo.proto \
-  ./proto/uast.proto

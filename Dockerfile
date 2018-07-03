@@ -12,15 +12,7 @@ RUN ./emsdk activate latest
 
 WORKDIR /
 
-# use latest version of protoc for js, v3.1.0 generates incorrect js
 RUN curl -k -L -o protoc.zip https://github.com/google/protobuf/releases/download/v3.6.0/protoc-3.6.0-linux-x86_64.zip && \
-    unzip protoc.zip && \
-    rm protoc.zip
-
-WORKDIR /app/protoc3.1
-
-# for cpp use v3.1.0. It must be the same version as the fork of protobuf for emscripten
-RUN curl -k -L -o protoc.zip https://github.com/google/protobuf/releases/download/v3.1.0/protoc-3.1.0-linux-x86_64.zip && \
     unzip protoc.zip && \
     rm protoc.zip
 

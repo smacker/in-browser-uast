@@ -30,18 +30,4 @@ cp libxml2/.libs/libxml2.a .
 cp libxml2/.libs/libxml2.so ./libxml2.dylib || true
 cp libxml2/.libs/libxml2.dylib . || true
 
-echo " clone and compile libprotobuf"
-git clone https://github.com/invokr/protobuf-emscripten.git
-(
-    cd protobuf-emscripten/3.1.0
-    sh autogen.sh
-    emconfigure ./configure --with-protoc=protoc
-    emmake make
-)
-
-cp protobuf-emscripten/3.1.0/src/.libs/libprotobuf.a .
-# different extentions on mac/linux
-cp protobuf-emscripten/3.1.0/src/.libs/libprotobuf.so ./libprotobuf.dylib || true
-cp protobuf-emscripten/3.1.0/src/.libs/libprotobuf.dylib . || true
-
 cd ..

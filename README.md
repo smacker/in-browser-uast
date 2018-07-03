@@ -20,7 +20,6 @@ The example app will be available on http://127.0.0.1:8444
 * build tools: cmake autoconf libtool automake pkg-config make
 * [emscripten](http://kripken.github.io/emscripten-site/)
 * [protoc](https://github.com/google/protobuf)
-* protoc 3.1.0 located in `./protoc3.1` directory
 
 ### Steps to build:
 
