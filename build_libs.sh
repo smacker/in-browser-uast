@@ -21,7 +21,9 @@ git clone git://git.gnome.org/libxml2 libxml2
     emconfigure ./autogen.sh \
         --without-debug \
         --without-ftp --without-http \
-        --without-python --without-regexps --without-threads --without-modules
+        --without-python --without-regexps \
+        --without-threads --without-modules \
+        --without-html --without-legacy --without-output --without-push
 
     emmake make
 )
