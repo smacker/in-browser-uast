@@ -40,6 +40,26 @@ var LibUAST = {
 
   getNodeRoleAt: function(n, idx) {
     return UAST.mapping[n].getRolesList()[idx];
+  },
+
+  getNodePropertiesSize: function(n) {
+    return UAST.mapping[n].getPropertiesMap().getLength();
+  },
+
+  getNodePropertyKeyAt: function(n, idx) {
+    var jsString = Array.from(UAST.mapping[n].getPropertiesMap().keys())[idx];
+    var lengthBytes = lengthBytesUTF8(jsString) + 1;
+    var stringOnWasmHeap = _malloc(lengthBytes);
+    stringToUTF8(jsString, stringOnWasmHeap, lengthBytes + 1);
+    return stringOnWasmHeap;
+  },
+
+  getNodePropertyValueAt: function(n, idx) {
+    var jsString = Array.from(UAST.mapping[n].getPropertiesMap().values())[idx];
+    var lengthBytes = lengthBytesUTF8(jsString) + 1;
+    var stringOnWasmHeap = _malloc(lengthBytes);
+    stringToUTF8(jsString, stringOnWasmHeap, lengthBytes + 1);
+    return stringOnWasmHeap;
   }
 };
 

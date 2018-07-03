@@ -11,8 +11,11 @@
 
 static Uast *ctx;
 
+// C to JS bindings (look at libuast.js)
+#ifdef __cplusplus
 extern "C"
 {
+#endif
     extern char *getNodeString(int n, char *method);
     extern int getNodeInt(int n, char *method, char *submethod);
     extern bool getNodeBool(int n, char *method);
@@ -22,8 +25,15 @@ extern "C"
 
     extern int getNodeRolesSize(int n);
     extern int getNodeRoleAt(int n, int idx);
-}
 
+    extern int getNodePropertiesSize(int n);
+    extern char *getNodePropertyKeyAt(int n, int idx);
+    extern char *getNodePropertyValueAt(int n, int idx);
+#ifdef __cplusplus
+}
+#endif
+
+// Implement libuast NodeIface
 static const char *InternalType(const void *node)
 {
     return getNodeString(*(int *)(node), (char *)"getInternalType");
@@ -59,17 +69,17 @@ static uint16_t RoleAt(const void *node, int index)
 
 static size_t PropertiesSize(const void *node)
 {
-    return 0;
+    return getNodePropertiesSize(*(int *)(node));
 }
 
 static const char *PropertyKeyAt(const void *node, int index)
 {
-    return NULL;
+    return getNodePropertyKeyAt(*(int *)(node), index);
 }
 
 static const char *PropertyValueAt(const void *node, int index)
 {
-    return NULL;
+    return getNodePropertyValueAt(*(int *)(node), index);
 }
 
 static bool HasStartOffset(const void *node)
@@ -132,18 +142,18 @@ static uint32_t EndCol(const void *node)
     return getNodeInt(*(int *)(node), (char *)"getEndPosition", (char *)"getCol");
 }
 
-//
+// Convenient struct for filter results
+typedef struct
+{
+    Nodes *nodes;
+    char *error;
+} filter_result;
 
+//
 #ifdef __cplusplus
 extern "C"
 {
 #endif
-
-    typedef struct
-    {
-        Nodes *nodes;
-        char *error;
-    } filter_result;
 
     filter_result *EMSCRIPTEN_KEEPALIVE filter(int uast, const char *query)
     {
@@ -170,8 +180,6 @@ extern "C"
             .HasEndCol = HasEndCol,
             .EndCol = EndCol,
         });
-
-        printf("query: %s\n", query);
 
         Nodes *nodes = UastFilter(ctx, &uast, query);
 
