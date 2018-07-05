@@ -102,7 +102,6 @@ function convertUAST(mapping) {
     tree[id] = {
       id: +id + 1,
       InternalType: node.getInternalType(),
-      Token: node.getToken(),
       Properties: node
         .getPropertiesMap()
         .toArray()
@@ -121,6 +120,10 @@ function convertUAST(mapping) {
       //
       expanded: id === '0'
     };
+
+    if (node.getToken()) {
+      tree[id].Token = node.getToken();
+    }
 
     return tree;
   }, {});
@@ -154,7 +157,13 @@ class App extends Component {
   }
 
   handleParse() {
-    this.setState({ res: null, uastMapping: null, err: null });
+    this.setState({
+      res: null,
+      uastMapping: null,
+      filterResult: null,
+      filterErr: null,
+      err: null
+    });
 
     parse(this.state.code)
       .then(res => {
