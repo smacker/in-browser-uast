@@ -10,7 +10,7 @@
     "react-codemirror2": "^5.1.0",
     "react-dom": "^16.4.0",
     "react-scripts": "1.1.4",
-    "uast-viewer": "^0.0.6"
+    "uast-viewer": "^0.0.7"
   },
   "scripts": {
     "start": "react-scripts start",

@@ -1,9 +1,20 @@
+html,
+body,
+#root {
+  height: 100%;
+}
+
 .app {
+  height: 100%;
+
   display: flex;
 }
 
 .app__left-pane,
 .app__right-pane {
+  display: flex;
+  flex-direction: column;
+
   width: 50%;
   height: 100%;
 }
@@ -17,4 +28,15 @@
 .filter-box {
   margin: 10px;
   text-align: center;
+}
+
+.uast-editor,
+.uast-viewer,
+.react-codemirror2,
+.CodeMirror {
+  height: 100%;
+}
+
+.uast-editor {
+  overflow: hidden;
 }

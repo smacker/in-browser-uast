@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import UASTViewer, { Editor } from 'uast-viewer';
+import UASTViewer, { Editor, withUASTEditor } from 'uast-viewer';
 import { ProtocolServiceClient } from './_proto/protocol_pb_service';
 import { ParseRequest } from './_proto/protocol_pb';
 import { Role } from './_proto/uast_pb';
@@ -87,47 +87,112 @@ function mapUAST(uast) {
   return mapping;
 }
 
-function convertPos(pos) {
-  return {
-    Offset: pos.getOffset(),
-    Line: pos.getLine(),
-    Col: pos.getCol()
-  };
+function Layout({
+  editorProps,
+  uastViewerProps,
+  rootIds,
+  wasmReady,
+  query,
+  filterErr,
+  handleParse,
+  handleCodeChange,
+  handleQueryChange,
+  handleFilter
+}) {
+  return (
+    <div className="app">
+      <div className="app__left-pane">
+        <div>
+          <button className="parse-button" onClick={handleParse}>
+            Parse
+          </button>
+        </div>
+        <Editor {...editorProps} onChange={handleCodeChange} />
+      </div>
+      <div className="app__right-pane">
+        <div className="filter-box">
+          Query{' '}
+          <input
+            type="text"
+            value={query}
+            onChange={e => handleQueryChange(e.target.value)}
+          />
+          <button onClick={handleFilter} disabled={!wasmReady}>
+            Filter
+          </button>
+        </div>
+        {filterErr ? <div>{filterErr.toString()}</div> : null}
+        {uastViewerProps.uast ? (
+          <UASTViewer {...uastViewerProps} rootIds={rootIds} />
+        ) : null}
+      </div>
+    </div>
+  );
 }
 
-function convertUAST(mapping) {
-  return Object.keys(mapping).reduce((tree, id) => {
-    const node = mapping[id];
+function transformer(mapping, expandLevel, ...hooks) {
+  if (!mapping) {
+    return null;
+  }
 
-    tree[id] = {
-      id: +id + 1,
-      InternalType: node.getInternalType(),
-      Properties: node
+  const tree = {};
+  let id = 0;
+
+  function convertPos(pos) {
+    return {
+      Offset: pos.getOffset(),
+      Line: pos.getLine(),
+      Col: pos.getCol()
+    };
+  }
+
+  function convertNode(pbNode, level, parentId) {
+    const curId = id + 1;
+    id = curId;
+
+    const node = {
+      id: curId,
+      //
+      InternalType: pbNode.getInternalType(),
+      Properties: pbNode
         .getPropertiesMap()
         .toArray()
         .reduce(
           (acc, [key, value]) => Object.assign(acc, { [key]: value }),
           {}
         ),
-      StartPosition: node.hasStartPosition()
-        ? convertPos(node.getStartPosition())
+      StartPosition: pbNode.hasStartPosition()
+        ? convertPos(pbNode.getStartPosition())
         : null,
-      EndPosition: node.hasEndPosition()
-        ? convertPos(node.getEndPosition())
+      EndPosition: pbNode.hasEndPosition()
+        ? convertPos(pbNode.getEndPosition())
         : null,
-      Roles: node.getRolesList().map(r => reversedRoles[r]),
-      Children: node.getChildrenList().map(n => n.id),
+      Roles: pbNode.getRolesList().map(r => reversedRoles[r]),
       //
-      expanded: id === '0'
+
+      expanded: level < expandLevel,
+      parentId
     };
 
-    if (node.getToken()) {
-      tree[id].Token = node.getToken();
+    if (pbNode.getToken()) {
+      node.Token = pbNode.getToken();
     }
 
-    return tree;
-  }, {});
+    node.Children = pbNode
+      .getChildrenList()
+      .map(n => convertNode(n, level + 1, curId));
+
+    tree[curId] = hooks.reduce((n, hook) => hook(n), node);
+
+    return curId;
+  }
+
+  convertNode(mapping[0], 0);
+
+  return tree;
 }
+
+const Content = withUASTEditor(Layout, transformer);
 
 class App extends Component {
   constructor(props) {
@@ -145,6 +210,8 @@ class App extends Component {
     };
 
     this.handleParse = this.handleParse.bind(this);
+    this.handleCodeChange = this.handleCodeChange.bind(this);
+    this.handleQueryChange = this.handleQueryChange.bind(this);
     this.handleFilter = this.handleFilter.bind(this);
   }
 
@@ -171,6 +238,14 @@ class App extends Component {
         this.setState({ res, uastMapping });
       })
       .catch(err => this.setState({ err }));
+  }
+
+  handleCodeChange(code) {
+    this.setState({ code });
+  }
+
+  handleQueryChange(query) {
+    this.setState({ query });
   }
 
   handleFilter() {
@@ -203,37 +278,22 @@ class App extends Component {
       return <div>{err.toString()}</div>;
     }
 
-    let uast = convertUAST(uastMapping);
-    let rootIds = filterResult || [0];
+    let rootIds = filterResult || [1];
 
     return (
-      <div className="app">
-        <div className="app__left-pane">
-          <button className="parse-button" onClick={this.handleParse}>
-            Parse
-          </button>
-          <Editor
-            code={code}
-            onChange={code => this.setState({ code })}
-            languageMode="text/javascript"
-          />
-        </div>
-        <div className="app__right-pane">
-          <div className="filter-box">
-            Query{' '}
-            <input
-              type="text"
-              value={query}
-              onChange={e => this.setState({ query: e.target.value })}
-            />
-            <button onClick={this.handleFilter} disabled={!wasmReady}>
-              Filter
-            </button>
-          </div>
-          {filterErr ? <div>{filterErr.toString()}</div> : null}
-          {uast ? <UASTViewer uast={uast} rootIds={rootIds} /> : null}
-        </div>
-      </div>
+      <Content
+        code={code}
+        languageMode="text/javascript"
+        uast={uastMapping}
+        rootIds={rootIds}
+        wasmReady={wasmReady}
+        query={query}
+        filterErr={filterErr}
+        handleParse={this.handleParse}
+        handleCodeChange={this.handleCodeChange}
+        handleQueryChange={this.handleQueryChange}
+        handleFilter={this.handleFilter}
+      />
     );
   }
 }
