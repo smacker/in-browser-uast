@@ -11,14 +11,3 @@ protoc \
   ./proto/github.com/gogo/protobuf/gogoproto/gogo.proto \
   ./proto/uast.proto \
   ./proto/protocol.proto
-
-# create-react-app doesn't support lint disable
-disable_eslint() {
-  (echo "/* eslint-disable */"; cat $1) > $1.tmp
-  mv $1.tmp $1
-}
-
-disable_eslint src/_proto/uast_pb.js
-disable_eslint src/_proto/protocol_pb.js
-disable_eslint src/_proto/protocol_pb_service.js
-disable_eslint src/_proto/github.com/gogo/protobuf/gogoproto/gogo_pb.js
