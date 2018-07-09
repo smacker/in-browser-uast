@@ -1,98 +1,40 @@
 import React, { Component } from 'react';
 import UASTViewer, { Editor, withUASTEditor } from 'uast-viewer';
-import { ProtocolServiceClient } from './_proto/protocol_pb_service';
-import { ParseRequest } from './_proto/protocol_pb';
 import { Role } from './_proto/uast_pb';
 import 'uast-viewer/dist/default-theme.css';
+import Client from './client';
+import { protoToMap, filter } from './libuast';
 import './App.css';
+
+const client = new Client('http://127.0.0.1:8080');
 
 const reversedRoles = Object.keys(Role).reduce(
   (acc, name) => Object.assign(acc, { [Role[name]]: name.toLowerCase() }),
   {}
 );
 
-/* global Module */
-function readArray(ptr, length) {
-  let result = new Uint8Array(length);
-  for (let i = 0; i < length; i++) {
-    result[i] = Module.HEAP8[ptr + i];
-  }
-  return result;
-}
-
-function callLibuast(uast, mapping, query) {
-  return new Promise((resolve, reject) => {
-    const api = {
-      filter: Module.cwrap('filter', 'number', ['number', 'string']),
-      freeFilter: Module.cwrap('free_filter', '', ['number']),
-      getError: Module.cwrap('get_error', 'string', ['number']),
-      getNodesSize: Module.cwrap('get_nodes_size', 'number', ['number']),
-      getNodes: Module.cwrap('get_nodes', 'number', ['number'])
-    };
-
-    Module.UAST_setMapping(mapping);
-
-    const result = api.filter(uast.id, query);
-    if (!result) {
-      return reject(new Error('internal error: filter did not return result'));
-    }
-
-    const err = api.getError(result);
-    if (err) {
-      api.freeFilter(result);
-      return reject(new Error(err));
-    }
-
-    const size = api.getNodesSize(result);
-    const nodes = api.getNodes(result);
-    const arr = readArray(nodes, size);
-
-    Module.UAST_setMapping(null);
-    api.freeFilter(result);
-
-    resolve(Array.from(arr));
-  });
-}
-
-function parse(code) {
-  const client = new ProtocolServiceClient('http://127.0.0.1:8080');
-  const req = new ParseRequest();
-  req.setLanguage('javascript');
-  req.setContent(code);
-  return new Promise((resolve, reject) => {
-    client.parse(req, function(err, res) {
-      if (err) {
-        reject(new Error(err));
-        return;
-      }
-
-      resolve(res);
-    });
-  });
-}
-
-function mapUAST(uast) {
-  let globalId = 0;
-  let mapping = {};
-
-  function addIds(node) {
-    mapping[globalId] = node;
-
-    node.id = globalId;
-    node.getChildrenList().forEach(child => addIds(child, ++globalId));
+function FilteredUast({ filtering, filterErr, uastViewerProps, rootIds }) {
+  if (filterErr) {
+    return <div>{filterErr.toString()}</div>;
   }
 
-  addIds(uast);
+  if (filtering) {
+    return <div>filtering...</div>;
+  }
 
-  return mapping;
+  if (uastViewerProps.uast) {
+    return <UASTViewer {...uastViewerProps} rootIds={rootIds} />;
+  }
+
+  return null;
 }
 
 function Layout({
   editorProps,
   uastViewerProps,
   rootIds,
-  wasmReady,
   query,
+  filtering,
   filterErr,
   handleParse,
   handleCodeChange,
@@ -117,14 +59,14 @@ function Layout({
             value={query}
             onChange={e => handleQueryChange(e.target.value)}
           />
-          <button onClick={handleFilter} disabled={!wasmReady}>
-            Filter
-          </button>
+          <button onClick={handleFilter}>Filter</button>
         </div>
-        {filterErr ? <div>{filterErr.toString()}</div> : null}
-        {uastViewerProps.uast ? (
-          <UASTViewer {...uastViewerProps} rootIds={rootIds} />
-        ) : null}
+        <FilteredUast
+          filtering={filtering}
+          filterErr={filterErr}
+          uastViewerProps={uastViewerProps}
+          rootIds={rootIds}
+        />
       </div>
     </div>
   );
@@ -202,9 +144,9 @@ class App extends Component {
       code: 'console.log("test");',
       res: null,
       err: null,
-      wasmReady: false,
       query: '//*[@roleLiteral]',
       uastMapping: null,
+      filtering: false,
       filterResult: null,
       filterErr: null
     };
@@ -217,24 +159,22 @@ class App extends Component {
 
   componentDidMount() {
     this.handleParse();
-
-    Module.onRuntimeInitialized = async _ => {
-      this.setState({ wasmReady: true });
-    };
   }
 
   handleParse() {
     this.setState({
       res: null,
       uastMapping: null,
+      filtering: false,
       filterResult: null,
       filterErr: null,
       err: null
     });
 
-    parse(this.state.code)
+    client
+      .parse(this.state.code, '', 'javascript')
       .then(res => {
-        const uastMapping = mapUAST(res.getUast());
+        const uastMapping = protoToMap(res.getUast());
         this.setState({ res, uastMapping });
       })
       .catch(err => this.setState({ err }));
@@ -249,13 +189,12 @@ class App extends Component {
   }
 
   handleFilter() {
-    this.setState({ filterResult: null, filterErr: null });
+    this.setState({ filtering: true, filterResult: null, filterErr: null });
 
-    const uast = this.state.res.getUast();
-
-    callLibuast(uast, this.state.uastMapping, this.state.query)
+    filter(0, this.state.uastMapping, this.state.query)
       .then(r => this.setState({ filterResult: r }))
-      .catch(filterErr => this.setState({ filterErr }));
+      .catch(filterErr => this.setState({ filterErr }))
+      .then(() => this.setState({ filtering: false }));
   }
 
   render() {
@@ -263,9 +202,9 @@ class App extends Component {
       code,
       res,
       err,
-      wasmReady,
       query,
       uastMapping,
+      filtering,
       filterResult,
       filterErr
     } = this.state;
@@ -286,8 +225,8 @@ class App extends Component {
         languageMode="text/javascript"
         uast={uastMapping}
         rootIds={rootIds}
-        wasmReady={wasmReady}
         query={query}
+        filtering={filtering}
         filterErr={filterErr}
         handleParse={this.handleParse}
         handleCodeChange={this.handleCodeChange}

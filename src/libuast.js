@@ -1,67 +1,86 @@
-var LibUAST = {
-  $UAST__postset:
-    'Module["UAST_setMapping"] = function Module_UAST_setMapping(mapping) { UAST.mapping = mapping }',
+/* global Module */
 
-  $UAST: {
-    mapping: {}
-  },
+export function protoToMap(uast) {
+  let id = 0;
+  let mapping = {};
 
-  $setMapping: function(mapping) {
-    $UAST.mapping = mapping;
-  },
+  function addIds(node) {
+    mapping[id] = node;
 
-  getNodeString: function(n, method) {
-    var jsString = UAST.mapping[n][UTF8ToString(method)]();
-    var lengthBytes = lengthBytesUTF8(jsString) + 1;
-    var stringOnWasmHeap = _malloc(lengthBytes);
-    stringToUTF8(jsString, stringOnWasmHeap, lengthBytes + 1);
-    return stringOnWasmHeap;
-  },
-
-  getNodeBool: function(n, method) {
-    return UAST.mapping[n][UTF8ToString(method)]();
-  },
-
-  getNodeInt: function(n, method, submethod) {
-    return UAST.mapping[n][UTF8ToString(method)]()[UTF8ToString(submethod)]();
-  },
-
-  getNodeChildrenSize: function(n) {
-    return UAST.mapping[n].getChildrenList().length;
-  },
-
-  getNodeChildAt: function(n, idx) {
-    return UAST.mapping[n].getChildrenList()[idx].id;
-  },
-
-  getNodeRolesSize: function(n) {
-    return UAST.mapping[n].getRolesList().length;
-  },
-
-  getNodeRoleAt: function(n, idx) {
-    return UAST.mapping[n].getRolesList()[idx];
-  },
-
-  getNodePropertiesSize: function(n) {
-    return UAST.mapping[n].getPropertiesMap().getLength();
-  },
-
-  getNodePropertyKeyAt: function(n, idx) {
-    var jsString = Array.from(UAST.mapping[n].getPropertiesMap().keys())[idx];
-    var lengthBytes = lengthBytesUTF8(jsString) + 1;
-    var stringOnWasmHeap = _malloc(lengthBytes);
-    stringToUTF8(jsString, stringOnWasmHeap, lengthBytes + 1);
-    return stringOnWasmHeap;
-  },
-
-  getNodePropertyValueAt: function(n, idx) {
-    var jsString = Array.from(UAST.mapping[n].getPropertiesMap().values())[idx];
-    var lengthBytes = lengthBytesUTF8(jsString) + 1;
-    var stringOnWasmHeap = _malloc(lengthBytes);
-    stringToUTF8(jsString, stringOnWasmHeap, lengthBytes + 1);
-    return stringOnWasmHeap;
+    node.id = id;
+    node.getChildrenList().forEach(child => addIds(child, ++id));
   }
+
+  addIds(uast);
+
+  return mapping;
+}
+
+let initResolve;
+let initReject;
+const runtimeInitialized = new Promise((resolve, reject) => {
+  initResolve = resolve;
+  initReject = reject;
+});
+
+Module.onRuntimeInitialized = () => {
+  initResolve();
 };
 
-autoAddDeps(LibUAST, '$UAST');
-mergeInto(LibraryManager.library, LibUAST);
+Module.onAbort = () => {
+  initReject(new Error('error during initialization'));
+};
+
+function readArray(ptr, length) {
+  let result = new Uint8Array(length);
+  for (let i = 0; i < length; i++) {
+    result[i] = Module.HEAP8[ptr + i];
+  }
+  return result;
+}
+
+const cApi = {
+  filter: Module.cwrap('filter', 'number', ['number', 'string']),
+  freeFilter: Module.cwrap('free_filter', '', ['number']),
+  getError: Module.cwrap('get_error', 'string', ['number']),
+  getNodesSize: Module.cwrap('get_nodes_size', 'number', ['number']),
+  getNodes: Module.cwrap('get_nodes', 'number', ['number'])
+};
+
+export function isInitialized() {
+  return runtimeInitialized;
+}
+
+export function filter(id, mapping, query) {
+  return runtimeInitialized.then(() => {
+    Module.UAST_setMapping(mapping);
+
+    return new Promise((resolve, reject) => {
+      const result = cApi.filter(id, query);
+      if (!result) {
+        return reject(
+          new Error('internal error: filter did not return result')
+        );
+      }
+
+      function cleanup() {
+        Module.UAST_setMapping(null);
+        cApi.freeFilter(result);
+      }
+
+      const err = cApi.getError(result);
+      if (err) {
+        cleanup();
+        return reject(new Error(err));
+      }
+
+      const size = cApi.getNodesSize(result);
+      const nodes = cApi.getNodes(result);
+      const arr = readArray(nodes, size);
+
+      cleanup();
+
+      return resolve(Array.from(arr));
+    });
+  });
+}

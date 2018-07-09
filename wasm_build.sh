@@ -4,7 +4,7 @@
 
 emcc -s WASM=1 -s USE_ZLIB=1 -Os -s DISABLE_EXCEPTION_CATCHING=0 \
     -s EXTRA_EXPORTED_RUNTIME_METHODS='["cwrap"]' \
-    --js-library src/libuast.js \
+    --js-library src/libuast_proto_binding.js \
     -Werror \
     -o public/libuast.js \
     -Ilibs/libxml2/include \
