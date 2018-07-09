@@ -7,7 +7,7 @@
     "grpc-web-client": "^0.6.2"
   },
   "scripts": {
-    "build:bundle": "webpack --output-filename=bundle.js"
+    "build:bundle": "webpack --output-filename=bblfsh.js --output-library=bblfsh"
   },
   "devDependencies": {
     "file-loader": "^1.1.11",
