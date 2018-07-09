@@ -1,4 +1,9 @@
-FROM debian:sid-slim as builder
+# Dockerfile to build the library without deps on host machine
+#
+# docker build -t bblfshjs-build .
+# then you can grab the builded lib from /bblfsh directory
+
+FROM debian:sid-slim
 
 RUN apt-get update
 RUN apt-get install -y --no-install-recommends ca-certificates curl unzip nodejs npm \
@@ -16,25 +21,11 @@ RUN curl -k -L -o protoc.zip https://github.com/google/protobuf/releases/downloa
     unzip protoc.zip && \
     rm protoc.zip
 
-WORKDIR /app
+WORKDIR /bblfsh
 
 RUN npm install -g yarn
 
-COPY build_libs.sh .
-
-RUN /bin/bash -c "source ../emsdk/emsdk_env.sh && ./build_libs.sh"
-
-COPY package.json .
-COPY yarn.lock .
-RUN yarn
-
 COPY . .
 
-RUN ./protogen.sh
-
-RUN /bin/bash -c "source ../emsdk/emsdk_env.sh && ./wasm_build.sh"
-RUN yarn build
-
-FROM nginx:latest
-
-COPY --from=builder /app/build /usr/share/nginx/html
+RUN yarn
+RUN /bin/bash -c "source ../emsdk/emsdk_env.sh && yarn build"
