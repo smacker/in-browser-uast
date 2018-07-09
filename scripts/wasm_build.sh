@@ -2,6 +2,7 @@
 
 set -e
 
+mkdir -p dist
 mkdir -p src/_wasm
 
 # DISABLE_EXCEPTION_CATCHING must be 0 to get correct error from libuast
