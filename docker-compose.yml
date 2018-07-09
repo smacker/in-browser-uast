@@ -1,12 +1,19 @@
 version: '3.3'
 
 services:
-  prototype:
-    build: .
+  example-uast-viewer:
+    build: ./examples/uast-viewer
     ports:
-      - "8444:80"
+      - "8444:3000"
     depends_on:
       - grpcwebproxy
+
+  # example-vanilla-bundled:
+  #   build: ./examples/vanilla-bundled
+  #   ports:
+  #     - "8445:80"
+  #   depends_on:
+  #     - grpcwebproxy
 
   bblfsh:
     image: "bblfsh/bblfshd:v2.5.0"
