@@ -26,7 +26,33 @@ const libuast = initLibuast({
 
 ## Usage
 
-TBD
+### Client
+
+```js
+import Client from 'bblfsh';
+
+const client = new Client('<web-grpc-address>');
+
+client.parse(sourceCode, filename, language)
+  .then(r => /* gRPC response */)
+  .catch(err => /* or error */);
+```
+
+### Libuast
+
+```js
+import { protoToMap, initLibuast } from 'bblfsh';
+
+const libuast = initLibuast();
+const uastMapping = protoToMap(uast);
+
+libuast.filter(nodeId, uastMapping, xpathQuery)
+  .then(ids => /* list of nodes */)
+  .catch(err => /* or error */);
+
+```
+
+Full API documentation available here: TBD.
 
 ## Run examples locally
 
