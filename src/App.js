@@ -1,17 +1,12 @@
 import React, { Component } from 'react';
 import UASTViewer, { Editor, withUASTEditor } from 'uast-viewer';
-import { Role } from './_proto/uast_pb';
 import 'uast-viewer/dist/default-theme.css';
 import Client from './client';
 import { protoToMap, filter } from './libuast';
+import { roleToString } from './utils';
 import './App.css';
 
 const client = new Client('http://127.0.0.1:8080');
-
-const reversedRoles = Object.keys(Role).reduce(
-  (acc, name) => Object.assign(acc, { [Role[name]]: name.toLowerCase() }),
-  {}
-);
 
 function FilteredUast({ filtering, filterErr, uastViewerProps, rootIds }) {
   if (filterErr) {
@@ -109,7 +104,7 @@ function transformer(mapping, expandLevel, ...hooks) {
       EndPosition: pbNode.hasEndPosition()
         ? convertPos(pbNode.getEndPosition())
         : null,
-      Roles: pbNode.getRolesList().map(r => reversedRoles[r]),
+      Roles: pbNode.getRolesList().map(r => roleToString(r)),
       //
 
       expanded: level < expandLevel,
