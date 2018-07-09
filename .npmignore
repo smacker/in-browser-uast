@@ -1,0 +1,8 @@
+/cpp
+/examples
+/libs
+/proto
+/scripts
+/Dockerfile
+/docker-compose.yml
+/.dockerignore
