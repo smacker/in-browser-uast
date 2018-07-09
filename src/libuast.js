@@ -1,5 +1,10 @@
 import lib from './_wasm/libuast.js';
 
+/**
+ * Creates mapping to each node in the tree with unique id.
+ * @param {pb.Node} uast - uast tree.
+ * @returns {object.<number, pb.Node>} - object with keys as unique ids starting with 0 and values are pointers to nodes.
+ */
 export function protoToMap(uast) {
   let id = 0;
   let mapping = {};
@@ -16,6 +21,12 @@ export function protoToMap(uast) {
   return mapping;
 }
 
+/**
+ * Creates new instance of libuast.
+ * @alias initLibuast
+ * @param {object} [options] - Emscripten Module [creation attributes](http://kripken.github.io/emscripten-site/docs/api_reference/module.html#affecting-execution)
+ * @returns {Libuast} - instance of the library
+ */
 export function init(options) {
   const Module = lib(options);
 
@@ -50,10 +61,30 @@ export function init(options) {
     getNodes: Module.cwrap('get_nodes', 'number', ['number'])
   };
 
+  /**
+   * some desc
+   * @namespace Libuast
+   */
+
+  /**
+   * Returns status of the library.
+   * @memberof Libuast
+   * @instance
+   * @returns {Promise} - Promise is resolved when WASM is initialized or rejected in case of error.
+   */
   function isInitialized() {
     return runtimeInitialized;
   }
 
+  /**
+   * Filters UAST tree using xpath query.
+   * @memberof Libuast
+   * @instance
+   * @param {string} id - Root node id.
+   * @param {Object<number, pb.Node>} mapping - UAST tree mapping.
+   * @param {string} query - xpath query.
+   * @returns {number[]} - list of node ids that satisfy the given query.
+   */
   function filter(id, mapping, query) {
     return runtimeInitialized.then(() => {
       Module.UAST_setMapping(mapping);

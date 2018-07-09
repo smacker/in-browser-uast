@@ -12,11 +12,22 @@ function promisify(client, method, req) {
   });
 }
 
+/**
+ * Create a gRPC client.
+ * @param {string} addr - web gRPC address.
+ */
 class Client {
   constructor(addr) {
     this.client = new ProtocolServiceClient(addr);
   }
 
+  /**
+   * Queries the Babelfish server and receives the UAST response for the specified file.
+   * @param {string} code - input source code
+   * @param {string} [filename] - name of the parsing file
+   * @param {string} [language] - language name
+   * @returns {pb.ParseResponse}
+   */
   parse(code, filename, language) {
     const req = new ParseRequest();
 
@@ -33,6 +44,10 @@ class Client {
     return promisify(this.client, 'parse', req);
   }
 
+  /**
+   * Queries the Babelfish server for version and runtime information.
+   * @returns {pb.VersionResponse}
+   */
   version() {
     const req = new VersionRequest();
 

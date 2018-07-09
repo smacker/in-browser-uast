@@ -52,7 +52,7 @@ libuast.filter(nodeId, uastMapping, xpathQuery)
 
 ```
 
-Full API documentation available here: TBD.
+Full API documentation available here: [API.md](API.md).
 
 ## Run examples locally
 

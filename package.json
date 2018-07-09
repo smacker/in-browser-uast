@@ -14,7 +14,8 @@
     "build:libs": "./scripts/build_libs.sh",
     "build:proto": "./scripts/protogen.sh",
     "build:wasm": "./scripts/wasm_build.sh",
-    "build:bundle": "webpack --output-filename=bblfsh.js --output-library=bblfsh"
+    "build:bundle": "webpack --output-filename=bblfsh.js --output-library=bblfsh",
+    "docs": "documentation build -f md --shallow src/*.js > API.md"
   },
   "devDependencies": {
     "file-loader": "^1.1.11",

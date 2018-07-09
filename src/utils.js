@@ -10,6 +10,10 @@ const reversedRoles = Object.keys(Role).reduce((acc, name) => {
   return Object.assign(acc, { [Role[name]]: newName });
 }, {});
 
+/**
+ * Returns TitleCaseName of a role.
+ * @param {number} roleId - role number identifier
+ */
 export function roleToString(roleId) {
   return reversedRoles[roleId];
 }
