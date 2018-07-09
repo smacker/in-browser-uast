@@ -1,8 +1,7 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
-import './index.css';
-import App from './App';
-import registerServiceWorker from './registerServiceWorker';
+import Client from './client';
+import { init, protoToMap } from './libuast';
+import { roleToString } from './utils';
 
-ReactDOM.render(<App />, document.getElementById('root'));
-registerServiceWorker();
+export default Client;
+
+export { protoToMap, init as initLibuast, roleToString };

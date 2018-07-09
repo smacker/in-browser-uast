@@ -1,12 +1,11 @@
 import React, { Component } from 'react';
 import UASTViewer, { Editor, withUASTEditor } from 'uast-viewer';
 import 'uast-viewer/dist/default-theme.css';
-import Client from './client';
-import { protoToMap, filter } from './libuast';
-import { roleToString } from './utils';
+import Client, { protoToMap, initLibuast, roleToString } from 'bblfsh';
 import './App.css';
 
 const client = new Client('http://127.0.0.1:8080');
+const libuast = initLibuast();
 
 function FilteredUast({ filtering, filterErr, uastViewerProps, rootIds }) {
   if (filterErr) {
@@ -186,7 +185,8 @@ class App extends Component {
   handleFilter() {
     this.setState({ filtering: true, filterResult: null, filterErr: null });
 
-    filter(0, this.state.uastMapping, this.state.query)
+    libuast
+      .filter(0, this.state.uastMapping, this.state.query)
       .then(r => this.setState({ filterResult: r }))
       .catch(filterErr => this.setState({ filterErr }))
       .then(() => this.setState({ filtering: false }));

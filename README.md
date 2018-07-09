@@ -18,7 +18,7 @@ The example app will be available on http://127.0.0.1:8444
 * nodejs + yarn
 * python2.7
 * build tools: cmake autoconf libtool automake pkg-config make
-* [emscripten](http://kripken.github.io/emscripten-site/)
+* [emscripten](http://kripken.github.io/emscripten-site/) (v1.38.8+)
 * [protoc](https://github.com/google/protobuf)
 
 ### Steps to build:

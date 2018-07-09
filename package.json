@@ -1,24 +1,18 @@
 {
-  "name": "grpcjs",
+  "name": "bblfsh",
   "version": "0.1.0",
-  "private": true,
+  "module": "src/index.js",
   "dependencies": {
-    "codemirror": "^5.39.0",
     "google-protobuf": "^3.5.0",
-    "grpc-web-client": "^0.6.2",
-    "react": "^16.4.0",
-    "react-codemirror2": "^5.1.0",
-    "react-dom": "^16.4.0",
-    "react-scripts": "1.1.4",
-    "uast-viewer": "^0.0.7"
+    "grpc-web-client": "^0.6.2"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test --env=jsdom",
-    "eject": "react-scripts eject"
+    "build:bundle": "webpack --output-filename=bundle.js"
   },
   "devDependencies": {
-    "ts-protoc-gen": "^0.7.3"
+    "file-loader": "^1.1.11",
+    "ts-protoc-gen": "^0.7.3",
+    "webpack": "^4.15.1",
+    "webpack-command": "^0.4.1"
   }
 }
