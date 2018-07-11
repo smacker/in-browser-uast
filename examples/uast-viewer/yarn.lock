@@ -6652,9 +6652,9 @@ ua-parser-js@^0.7.18:
   version "0.7.18"
   resolved "https://registry.yarnpkg.com/ua-parser-js/-/ua-parser-js-0.7.18.tgz#a7bfd92f56edfb117083b69e31d2aa8882d4b1ed"
 
-uast-viewer@^0.0.7:
-  version "0.0.7"
-  resolved "https://registry.yarnpkg.com/uast-viewer/-/uast-viewer-0.0.7.tgz#041b19ab55f330fc8aef8b0cba69b4a2cb68eaa7"
+uast-viewer@^0.0.8:
+  version "0.0.8"
+  resolved "https://registry.yarnpkg.com/uast-viewer/-/uast-viewer-0.0.8.tgz#e0e4c5bcad6bf3d62dcc48800a4350d800a01987"
 
 uglify-js@3.4.x, uglify-js@^3.0.13:
   version "3.4.4"
