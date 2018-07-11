@@ -7,6 +7,28 @@ import './App.css';
 const client = new Client('http://127.0.0.1:8080');
 const libuast = initLibuast();
 
+const nodeSchema = [
+  { name: 'internal_type', attr: n => n.pbNode.getInternalType() },
+  {
+    name: 'properties',
+    type: 'object',
+    attr: n =>
+      n.pbNode
+        .getPropertiesMap()
+        .toArray()
+        .reduce((acc, [key, value]) => Object.assign(acc, { [key]: value }), {})
+  },
+  { name: 'token', attr: n => n.pbNode.getToken() },
+  { name: 'start_position', type: 'location', attr: n => n.StartPosition },
+  { name: 'end_position', type: 'location', attr: n => n.EndPosition },
+  {
+    name: 'roles',
+    type: 'array',
+    label: '[]Role',
+    attr: n => n.pbNode.getRolesList().map(r => roleToString(r))
+  }
+];
+
 function FilteredUast({ filtering, filterErr, uastViewerProps, rootIds }) {
   if (filterErr) {
     return <div>{filterErr.toString()}</div>;
@@ -17,7 +39,9 @@ function FilteredUast({ filtering, filterErr, uastViewerProps, rootIds }) {
   }
 
   if (uastViewerProps.uast) {
-    return <UASTViewer {...uastViewerProps} rootIds={rootIds} />;
+    return (
+      <UASTViewer {...uastViewerProps} rootIds={rootIds} schema={nodeSchema} />
+    );
   }
 
   return null;
@@ -88,31 +112,16 @@ function transformer(mapping, expandLevel, ...hooks) {
 
     const node = {
       id: curId,
-      //
-      InternalType: pbNode.getInternalType(),
-      Properties: pbNode
-        .getPropertiesMap()
-        .toArray()
-        .reduce(
-          (acc, [key, value]) => Object.assign(acc, { [key]: value }),
-          {}
-        ),
+      pbNode,
       StartPosition: pbNode.hasStartPosition()
         ? convertPos(pbNode.getStartPosition())
         : null,
       EndPosition: pbNode.hasEndPosition()
         ? convertPos(pbNode.getEndPosition())
         : null,
-      Roles: pbNode.getRolesList().map(r => roleToString(r)),
-      //
-
       expanded: level < expandLevel,
       parentId
     };
-
-    if (pbNode.getToken()) {
-      node.Token = pbNode.getToken();
-    }
 
     node.Children = pbNode
       .getChildrenList()
