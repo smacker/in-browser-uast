@@ -1,5 +1,9 @@
 import { ProtocolServiceClient } from './_proto/protocol_pb_service';
-import { ParseRequest, VersionRequest } from './_proto/protocol_pb';
+import {
+  ParseRequest,
+  SupportedLanguagesRequest,
+  VersionRequest
+} from './_proto/protocol_pb';
 
 function promisify(client, method, req) {
   return new Promise((resolve, reject) => {
@@ -42,6 +46,16 @@ class Client {
     req.setContent(code);
 
     return promisify(this.client, 'parse', req);
+  }
+
+  /**
+   * Queries the Babelfish server for a list of supported languages.
+   * @returns {pb.SupportedLanguagesResponse}
+   */
+  supportedLanguages() {
+    const req = new SupportedLanguagesRequest();
+
+    return promisify(this.client, 'supportedLanguages', req);
   }
 
   /**
