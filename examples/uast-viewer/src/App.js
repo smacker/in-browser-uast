@@ -2,10 +2,18 @@ import React, { Component } from 'react';
 import UASTViewer, { Editor, withUASTEditor } from 'uast-viewer';
 import 'uast-viewer/dist/default-theme.css';
 import Client, { protoToMap, initLibuast, roleToString } from 'bblfsh';
+import libuastWasm from 'bblfsh/dist/libuast.wasm';
 import './App.css';
 
 const client = new Client('http://127.0.0.1:8080');
-const libuast = initLibuast();
+const libuast = initLibuast({
+  locateFile(path) {
+    if (path.endsWith('.wasm')) {
+      return libuastWasm;
+    }
+    return path;
+  }
+});
 
 const nodeSchema = [
   { name: 'internal_type', attr: n => n.pbNode.getInternalType() },
