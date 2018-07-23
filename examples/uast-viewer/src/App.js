@@ -229,7 +229,7 @@ class App extends Component {
       return <div>{err.toString()}</div>;
     }
 
-    let rootIds = filterResult || [1];
+    let rootIds = (filterResult || []).map(i => i + 1);
 
     return (
       <Content
