@@ -1,6 +1,6 @@
 {
   "name": "bblfsh",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "javascript bblfsh client",
   "author": "Maxim Sukharev <max@smacker.ru>",
   "homepage": "https://github.com/smacker/in-browser-uast",
