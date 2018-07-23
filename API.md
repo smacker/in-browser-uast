@@ -10,13 +10,14 @@
     -   [Parameters][6]
     -   [parse][7]
         -   [Parameters][8]
-    -   [version][9]
--   [initLibuast][10]
-    -   [Parameters][11]
--   [Libuast][12]
-    -   [isInitialized][13]
-    -   [filter][14]
-        -   [Parameters][15]
+    -   [supportedLanguages][9]
+    -   [version][10]
+-   [initLibuast][11]
+    -   [Parameters][12]
+-   [Libuast][13]
+    -   [isInitialized][14]
+    -   [filter][15]
+        -   [Parameters][16]
 
 ## protoToMap
 
@@ -26,7 +27,7 @@ Creates mapping to each node in the tree with unique id.
 
 -   `uast` **pb.Node** uast tree.
 
-Returns **[object][16]&lt;[number][17], pb.Node>** object with keys as unique ids starting with 0 and values are pointers to nodes.
+Returns **[object][17]&lt;[number][18], pb.Node>** object with keys as unique ids starting with 0 and values are pointers to nodes.
 
 ## roleToString
 
@@ -34,7 +35,7 @@ Returns TitleCaseName of a role.
 
 ### Parameters
 
--   `roleId` **[number][17]** role number identifier
+-   `roleId` **[number][18]** role number identifier
 
 ## Client
 
@@ -42,7 +43,7 @@ Create a gRPC client.
 
 ### Parameters
 
--   `addr` **[string][18]** web gRPC address.
+-   `addr` **[string][19]** web gRPC address.
 
 ### parse
 
@@ -50,11 +51,17 @@ Queries the Babelfish server and receives the UAST response for the specified fi
 
 #### Parameters
 
--   `code` **[string][18]** input source code
--   `filename` **[string][18]?** name of the parsing file
--   `language` **[string][18]?** language name
+-   `code` **[string][19]** input source code
+-   `filename` **[string][19]?** name of the parsing file
+-   `language` **[string][19]?** language name
 
 Returns **pb.ParseResponse** 
+
+### supportedLanguages
+
+Queries the Babelfish server for a list of supported languages.
+
+Returns **pb.SupportedLanguagesResponse** 
 
 ### version
 
@@ -68,9 +75,9 @@ Creates new instance of libuast.
 
 ### Parameters
 
--   `options` **[object][16]?** Emscripten Module [creation attributes][19]
+-   `options` **[object][17]?** Emscripten Module [creation attributes][20]
 
-Returns **[Libuast][20]** instance of the library
+Returns **[Libuast][21]** instance of the library
 
 ## Libuast
 
@@ -80,7 +87,7 @@ some desc
 
 Returns status of the library.
 
-Returns **[Promise][21]** Promise is resolved when WASM is initialized or rejected in case of error.
+Returns **[Promise][22]** Promise is resolved when WASM is initialized or rejected in case of error.
 
 ### filter
 
@@ -88,11 +95,11 @@ Filters UAST tree using xpath query.
 
 #### Parameters
 
--   `id` **[string][18]** Root node id.
--   `mapping` **[Object][16]&lt;[number][17], pb.Node>** UAST tree mapping.
--   `query` **[string][18]** xpath query.
+-   `id` **[string][19]** Root node id.
+-   `mapping` **[Object][17]&lt;[number][18], pb.Node>** UAST tree mapping.
+-   `query` **[string][19]** xpath query.
 
-Returns **[Array][22]&lt;[number][17]>** list of node ids that satisfy the given query.
+Returns **[Array][23]&lt;[number][18]>** list of node ids that satisfy the given query.
 
 [1]: #prototomap
 
@@ -110,30 +117,32 @@ Returns **[Array][22]&lt;[number][17]>** list of node ids that satisfy the given
 
 [8]: #parameters-3
 
-[9]: #version
+[9]: #supportedlanguages
 
-[10]: #initlibuast
+[10]: #version
 
-[11]: #parameters-4
+[11]: #initlibuast
 
-[12]: #libuast
+[12]: #parameters-4
 
-[13]: #isinitialized
+[13]: #libuast
 
-[14]: #filter
+[14]: #isinitialized
 
-[15]: #parameters-5
+[15]: #filter
 
-[16]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object
+[16]: #parameters-5
 
-[17]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
+[17]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object
 
-[18]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
+[18]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
 
-[19]: http://kripken.github.io/emscripten-site/docs/api_reference/module.html#affecting-execution
+[19]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
 
-[20]: #libuast
+[20]: http://kripken.github.io/emscripten-site/docs/api_reference/module.html#affecting-execution
 
-[21]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise
+[21]: #libuast
 
-[22]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array
+[22]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise
+
+[23]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array
