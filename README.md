@@ -67,7 +67,7 @@ Please check Dockerfile in the app example directory to run it without docker
 ### Backend dependencies without docker
 
 * run [bblfsh server](https://github.com/bblfsh/bblfshd/) on 9432 port
-* run [grpc proxy](https://github.com/improbable-eng/grpc-web/tree/master/go/grpcwebproxy) `grpcwebproxy --backend_addr=127.0.0.1:9432 --run_tls_server=false`
+* run [envoy proxy](https://www.envoyproxy.io/) with config from `envoy/envoy.yaml`
 
 ## Development:
 

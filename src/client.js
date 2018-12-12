@@ -1,4 +1,4 @@
-import { ProtocolServiceClient } from './_proto/protocol_pb_service';
+import { ProtocolServiceClient } from './_proto/protocol_grpc_web_pb';
 import {
   ParseRequest,
   SupportedLanguagesRequest,

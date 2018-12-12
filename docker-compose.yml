@@ -4,9 +4,9 @@ services:
   example-uast-viewer:
     build: ./examples/uast-viewer
     ports:
-      - "8444:3000"
+      - '8444:3000'
     depends_on:
-      - grpcwebproxy
+      - envoy
 
   # example-vanilla-bundled:
   #   build: ./examples/vanilla-bundled
@@ -16,27 +16,25 @@ services:
   #     - grpcwebproxy
 
   bblfsh:
-    image: "bblfsh/bblfshd:v2.5.0"
+    image: 'bblfsh/bblfshd:v2.5.0'
     privileged: true
+    ports:
+      - '9432:9432'
     volumes:
       - type: volume
         source: drivers
         target: /var/lib/bblfshd
-    entrypoint: ["/bin/sh"]
+    entrypoint: ['/bin/sh']
     command:
-    - "-c"
-    - "bblfshd & sleep 5 && bblfshctl driver install --recommended && tail -f /dev/null"
+      - '-c'
+      - 'bblfshd & sleep 5 && bblfshctl driver install --recommended && tail -f /dev/null'
 
-  grpcwebproxy:
-    image: mozgiii/docker-grpcwebproxy
+  envoy:
+    build: ./envoy
     ports:
-      - "8080:8080"
+      - '8080:8080'
     depends_on:
       - bblfsh
-    entrypoint: ["/grpcwebproxy"]
-    command:
-      - "--backend_addr=bblfsh:9432"
-      - "--run_tls_server=false"
 
 volumes:
   drivers:
